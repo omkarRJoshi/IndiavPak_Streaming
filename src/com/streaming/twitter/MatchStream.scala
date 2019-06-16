@@ -20,7 +20,7 @@ object MatchStream {
 
    val conf = new SparkConf().setMaster("local[*]").setAppName("Spark Streaming")
     // here local[*] shows that spark code will run on all possible cores.
-    val ssc = new StreamingContext(conf, Seconds(5))
+    val ssc = new StreamingContext(conf, Seconds(10))
     
     var consumerKey = ""
     var consumerSecret = ""
@@ -40,14 +40,22 @@ object MatchStream {
    
     def tweetConversionFunction(tweets : Status) : (String, String, String, String) = {
        
-             val name = tweets.getUser.getName
-             val location = tweets.getUser.getLocation
+             var name = tweets.getUser.getName
+             var location = tweets.getUser.getLocation
              val lang = tweets.getLang 
-             val tweet = tweets.getText
-             val hashtag = tweet.split(" ").filter(_.startsWith("#")).toString()
-             val latitude = tweets.getGeoLocation.getLatitude
-             val longitude = tweets.getGeoLocation.getLongitude
+             val hashtag = tweets.getText.split(" ").filter(_.startsWith("#")).toString()
+//             val tweet = tweets.getText
+//             val latitude = tweets.getGeoLocation.getLatitude
+//             val longitude = tweets.getGeoLocation.getLongitude
              
+             if(location.equals(null)){
+                location = "default"
+             }
+             if(name.equals(null)){
+               name = "default"
+             }
+//             here name and location cant be null because we are having location and name
+//             as a part of primary key in cassandra
              (location, name, hashtag, lang)
        
      }
@@ -69,7 +77,7 @@ object MatchStream {
     
     val tweetConversion = tweets.map(tweetConversionFunction)
     
-    tweetConversion.saveToCassandra("streaming", "indiavPak")
+    tweetConversion.saveToCassandra("streaming", "indiavpak")
     
 //    tweetConversion.print()
       
